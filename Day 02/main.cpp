@@ -17,9 +17,8 @@ int main(int argc, char *argv[])
 			PassPhrase.cbegin(), PassPhrase.cend(), Letter
 		);
 		Part1 += (Part1Check >= OpA) && (Part1Check <= OpB);
-		Part2 += 1 == 
-			(PassPhrase[OpA - 1] == Letter)
-			+ (PassPhrase[OpB - 1] == Letter);
+		Part2 +=
+			(PassPhrase[OpA - 1] == Letter)	!= (PassPhrase[OpB - 1] == Letter);
 	}
 	std::printf("%ju\n%ju\n", Part1, Part2);
 	return EXIT_SUCCESS;
