@@ -7,23 +7,36 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <charconv>
-constexpr static char Decimal[] = "0123456789";
-constexpr static char Hexadecimal[] = "abcdef0123456789";
+
 template<std::uintmax_t Min, std::uintmax_t Max>
 bool Between(std::uintmax_t Number)
 {
 	return (Min <= Number) && (Number <= Max);
 }
 
-bool Height(std::string_view HeightString)
+template<
+	std::uintmax_t Min, std::uintmax_t Max,
+	std::uintmax_t Digits, std::uintmax_t Base = 10
+>
+bool ValidNumber(std::string_view String)
 {
-	const auto UnitIdx = HeightString.find_first_not_of(Decimal);
-	if(UnitIdx == std::string::npos) return false;
+	if(String.length() != Digits) return false;
 	std::uintmax_t Number;
-	std::from_chars(
-		HeightString.cbegin(), HeightString.cbegin() + UnitIdx, Number
+	const std::from_chars_result ParseResult = std::from_chars(
+		String.data(), String.data() + Digits, Number, Base
 	);
-	const std::string_view Unit = HeightString.substr(UnitIdx);
+	if(ParseResult.ec != std::errc()) return false;
+	return Between<Min, Max>(Number);
+}
+
+bool ValidHeight(std::string_view String)
+{
+	std::uintmax_t Number;
+	const std::from_chars_result ParseResult = std::from_chars(
+		String.data(), String.data() + String.length(), Number
+	);
+	if(ParseResult.ec != std::errc()) return false;
+	const std::string_view Unit(ParseResult.ptr);
 	if( Unit == "cm" )		return Between<150, 193>(Number);
 	else if( Unit == "in")	return Between<59, 76>(Number);
 	return false;
@@ -32,31 +45,34 @@ bool Height(std::string_view HeightString)
 int main(int argc, char *argv[])
 {
 	const std::unordered_set<std::string> EyeColors = {{
-		"amb","blu","brn","gry","grn","hzl","oth"
+		"amb", "blu", "brn", "gry", "grn", "hzl", "oth"
+	}};
+	const std::unordered_set<const char*> RequiredFields = {{
+		"byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"
 	}};
 	std::unordered_map<std::string, std::string> CurPassport;
-	std::size_t Part1{}, Part2{};
+	std::size_t Part1{}, Part2{}, Digits{};
 	std::string CurLine;
 	while( std::getline(std::cin, CurLine) )
 	{
 		if( CurLine.size() == 0 )
 		{
-			if( 
-				CurPassport.count("byr") && CurPassport.count("iyr") &&
-				CurPassport.count("eyr") && CurPassport.count("hgt") &&
-				CurPassport.count("hcl") && CurPassport.count("ecl") &&
-				CurPassport.count("pid")
+			if(
+				std::all_of(
+					RequiredFields.cbegin(), RequiredFields.cend(),
+					[&CurPassport](const char* Field){ return CurPassport.count(Field);}
+				)
 			)
 			{
 				++Part1;
 				if(
-					CurPassport["byr"].size() == 4 && Between<1920, 2002>(std::stoull(CurPassport["byr"])) &&
-					CurPassport["iyr"].size() == 4 && Between<2010, 2020>(std::stoull(CurPassport["iyr"])) &&
-					CurPassport["eyr"].size() == 4 && Between<2020, 2030>(std::stoull(CurPassport["eyr"])) &&
-					Height(CurPassport["hgt"]) &&
-					CurPassport["hcl"].size() == 7 && CurPassport["hcl"][0] == '#' && (CurPassport["hcl"].find_first_not_of(Hexadecimal, 1) == std::string::npos) &&
+					ValidNumber<1920, 2002, 4>(CurPassport["byr"]) &&
+					ValidNumber<2010, 2020, 4>(CurPassport["iyr"]) &&
+					ValidNumber<2020, 2030, 4>(CurPassport["eyr"]) &&
+					ValidHeight(CurPassport["hgt"]) &&
+					CurPassport["hcl"][0] == '#' && ValidNumber<0, 0xFFFFFF, 6, 16>(CurPassport["hcl"].substr(1)) &&
 					EyeColors.count(CurPassport["ecl"]) &&
-					CurPassport["pid"].size() == 9 && (CurPassport["pid"].find_first_not_of(Decimal) == std::string::npos)
+					ValidNumber<0, 999999999, 9>(CurPassport["pid"])
 				) ++Part2;
 			}
 			CurPassport.clear();
@@ -68,6 +84,5 @@ int main(int argc, char *argv[])
 			CurPassport[CurAttribute.substr(0, Colon)] = CurAttribute.substr(Colon + 1);
 		}
 	}
-	std::cout << Part1 << std::endl;
-	std::cout << Part2 << std::endl;
+	std::cout << Part1 << std::endl; std::cout << Part2 << std::endl;
 }
