@@ -1,5 +1,4 @@
 #include <iostream>
-#include <string_view>
 #include <sstream>
 #include <algorithm>
 #include <unordered_map>
@@ -7,16 +6,10 @@
 #include <charconv>
 
 template<std::uintmax_t Min, std::uintmax_t Max>
-bool Between(std::uintmax_t Number)
-{
-	return (Min <= Number) && (Number <= Max);
-}
+bool Between(std::uintmax_t Number){return (Min <= Number) && (Number <= Max);}
 
-template<
-	std::uintmax_t Min, std::uintmax_t Max,
-	std::uintmax_t Digits, std::uintmax_t Base = 10
->
-bool ValidNumber(std::string_view String)
+template<std::uintmax_t Min, std::uintmax_t Max, std::uintmax_t Digits, std::uintmax_t Base = 10>
+bool ValidNumber(const std::string& String)
 {
 	if(String.length() != Digits) return false;
 	std::uintmax_t Number;
@@ -27,7 +20,7 @@ bool ValidNumber(std::string_view String)
 	return Between<Min, Max>(Number);
 }
 
-bool ValidHeight(std::string_view String)
+bool ValidHeight(const std::string& String)
 {
 	std::uintmax_t Number;
 	const std::from_chars_result ParseResult = std::from_chars(
@@ -40,17 +33,21 @@ bool ValidHeight(std::string_view String)
 	return false;
 }
 
+const std::unordered_set<std::string> EyeColors{{"amb", "blu", "brn", "gry", "grn", "hzl", "oth"}};
+const std::unordered_map<const char*, bool(*)(const std::string&)> RequiredFields{
+	{ "byr", ValidNumber<1920, 2002, 4>},
+	{ "iyr", ValidNumber<2010, 2020, 4>},
+	{ "eyr", ValidNumber<2020, 2030, 4>},
+	{ "hgt", ValidHeight},
+	{ "hcl", [](const std::string& String) -> bool{return String[0] == '#' && ValidNumber<0, 0xFFFFFF, 6, 16>(String.substr(1));}},
+	{ "ecl", [](const std::string& String) -> bool{return EyeColors.count(String);} },
+	{ "pid", ValidNumber<0, 999999999, 9>}
+};
+
 int main(int argc, char *argv[])
 {
-	const std::unordered_set<std::string> EyeColors = {{
-		"amb", "blu", "brn", "gry", "grn", "hzl", "oth"
-	}};
-	const std::unordered_set<const char*> RequiredFields = {{
-		"byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"
-	}};
 	std::unordered_map<std::string, std::string> CurPassport;
-	std::size_t Part1{}, Part2{};
-	std::string CurLine;
+	std::size_t Part1{}, Part2{}; std::string CurLine;
 	while( std::getline(std::cin, CurLine) )
 	{
 		if( CurLine.size() == 0 )
@@ -58,19 +55,16 @@ int main(int argc, char *argv[])
 			if(
 				std::all_of(
 					RequiredFields.cbegin(), RequiredFields.cend(),
-					[&CurPassport](const char* Field){ return CurPassport.count(Field);}
+					[&CurPassport](const auto& Field){ return CurPassport.count(Field.first);}
 				)
 			)
 			{
 				++Part1;
 				if(
-					ValidNumber<1920, 2002, 4>(CurPassport["byr"]) &&
-					ValidNumber<2010, 2020, 4>(CurPassport["iyr"]) &&
-					ValidNumber<2020, 2030, 4>(CurPassport["eyr"]) &&
-					ValidHeight(CurPassport["hgt"]) &&
-					CurPassport["hcl"][0] == '#' && ValidNumber<0, 0xFFFFFF, 6, 16>(CurPassport["hcl"].substr(1)) &&
-					EyeColors.count(CurPassport["ecl"]) &&
-					ValidNumber<0, 999999999, 9>(CurPassport["pid"])
+					std::all_of(
+						RequiredFields.cbegin(), RequiredFields.cend(),
+						[&CurPassport](const auto& Field){ return Field.second(CurPassport[Field.first]);}
+					)
 				) ++Part2;
 			}
 			CurPassport.clear();
