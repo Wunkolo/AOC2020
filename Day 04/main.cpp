@@ -1,6 +1,4 @@
 #include <iostream>
-#include <cstdint>
-#include <string>
 #include <string_view>
 #include <sstream>
 #include <algorithm>
@@ -51,7 +49,7 @@ int main(int argc, char *argv[])
 		"byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"
 	}};
 	std::unordered_map<std::string, std::string> CurPassport;
-	std::size_t Part1{}, Part2{}, Digits{};
+	std::size_t Part1{}, Part2{};
 	std::string CurLine;
 	while( std::getline(std::cin, CurLine) )
 	{
@@ -78,9 +76,9 @@ int main(int argc, char *argv[])
 			CurPassport.clear();
 		}
 		std::stringstream LineStream(CurLine); std::string CurAttribute;
-		while( std::getline(LineStream, CurAttribute, ' ' ))
+		while( LineStream >> CurAttribute)
 		{
-			const auto Colon = CurAttribute.find_first_of(':');
+			const std::size_t Colon = CurAttribute.find_first_of(':');
 			CurPassport[CurAttribute.substr(0, Colon)] = CurAttribute.substr(Colon + 1);
 		}
 	}
