@@ -2,8 +2,8 @@
 #include <sstream>
 #include <string_view>
 #include <algorithm>
-#include <unordered_map>
-#include <unordered_set>
+#include <numeric>
+#include <functional>
 #include <charconv>
 
 template<std::uintmax_t Min, std::uintmax_t Max>
@@ -56,15 +56,21 @@ bool ValidEyeColor(std::string_view String)
 	return false;
 }
 
-const static std::unordered_map<std::uint32_t, bool(*)(std::string_view)> RequiredFields{
-	{ Tag("byr"), ValidNumber<1920, 2002, 4>},
-	{ Tag("iyr"), ValidNumber<2010, 2020, 4>},
-	{ Tag("eyr"), ValidNumber<2020, 2030, 4>},
-	{ Tag("hgt"), ValidHeight},
-	{ Tag("hcl"), ValidHairColor},
-	{ Tag("ecl"), ValidEyeColor },
-	{ Tag("pid"), ValidNumber<0, 999999999, 9>}
-};
+std::uint16_t ValidateField(std::uint32_t Field, std::string_view Value)
+{
+	std::uint16_t Result{};
+	switch( Field )
+	{
+	case Tag("byr"): Result |= (0x100 | ValidNumber<1920,2002,4>  (Value)) << 0; break;
+	case Tag("iyr"): Result |= (0x100 | ValidNumber<2010,2020,4>  (Value)) << 1; break;
+	case Tag("eyr"): Result |= (0x100 | ValidNumber<2020,2030,4>  (Value)) << 2; break;
+	case Tag("hgt"): Result |= (0x100 | ValidHeight				  (Value)) << 3; break;
+	case Tag("hcl"): Result |= (0x100 | ValidHairColor			  (Value)) << 4; break;
+	case Tag("ecl"): Result |= (0x100 | ValidEyeColor			  (Value)) << 5; break;
+	case Tag("pid"): Result |= (0x100 | ValidNumber<0,999999999,9>(Value)) << 6; break;
+	}
+	return Result;
+}
 
 int main()
 {
@@ -74,21 +80,12 @@ int main()
 	{
 		if( CurLine.size() == 0 )
 		{
-			if(
-				std::all_of(
-					RequiredFields.cbegin(), RequiredFields.cend(),
-					[&CurPassport](const auto& Field){ return CurPassport.count(Field.first);}
-				)
-			)
-			{
-				++Part1;
-				if(
-					std::all_of(
-						RequiredFields.cbegin(), RequiredFields.cend(),
-						[&CurPassport](const auto& Field){ return Field.second(CurPassport[Field.first]);}
-					)
-				) ++Part2;
-			}
+			const std::uint16_t Tests = std::transform_reduce(
+				CurPassport.cbegin(), CurPassport.cend(), 0, std::bit_or<>(),
+				[](auto Attr){return ValidateField(Attr.first, Attr.second);}
+			);
+			Part1 += (Tests >> 8) == 0b01111111;
+			Part2 += Tests == 0b01111111'01111111;
 			CurPassport.clear();
 		}
 		std::stringstream LineStream(CurLine); std::string CurAttribute;
