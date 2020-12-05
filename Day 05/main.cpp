@@ -1,29 +1,23 @@
 #include <iostream>
 
-// XOR of all number s from [1,N]
+// XOR of all numbers from [1,N]
 // https://oeis.org/A003815
-inline std::uint16_t SigmaXor(std::uint16_t N)
+inline std::uintmax_t SigmaXor(std::uintmax_t N)
 {
-	return (N & (N << 1 & 2) - 1) ^ (N >> 1 & 1);
+	return (N & (N << 1 & 0b11) - 1) ^ (N >> 1 & 0b1);
 }
 
 int main()
 {
-	std::uint16_t Min{127*8+7}, Max{}, Missing{}; std::string CurLine;
+	std::uintmax_t Min{~0ull}, Max{}, Missing{}; std::string CurLine;
+	std::ios_base::sync_with_stdio(false); std::cin.tie(nullptr);
 	while( std::getline(std::cin, CurLine) )
 	{
-		std::uint16_t SeatID{};
-		for( std::size_t i = 0; i < 10; ++i )
+		std::uintmax_t SeatID{};
+		for( std::size_t i = 0; i < CurLine.length(); ++i )
 		{
-			SeatID <<=1;
-			switch(CurLine[i])
-			{
-				case 'B': case 'R':
-				{
-					SeatID |= 1;
-					break;
-				}
-			}
+			SeatID <<= 1;
+			if(CurLine[i]=='B' || CurLine[i]=='R') SeatID |= 1;
 		}
 		Missing ^= SeatID;
 		Max = std::max(Max, SeatID); Min = std::min(Min, SeatID);
