@@ -61,15 +61,26 @@ std::uint16_t ValidateField(std::uint32_t Field, std::string_view Value)
 	std::uint16_t Result{};
 	switch( Field )
 	{
-	case Tag("byr"): Result |= (0x100 | ValidNumber<1920,2002,4>  (Value)) << 0; break;
-	case Tag("iyr"): Result |= (0x100 | ValidNumber<2010,2020,4>  (Value)) << 1; break;
-	case Tag("eyr"): Result |= (0x100 | ValidNumber<2020,2030,4>  (Value)) << 2; break;
-	case Tag("hgt"): Result |= (0x100 | ValidHeight				  (Value)) << 3; break;
-	case Tag("hcl"): Result |= (0x100 | ValidHairColor			  (Value)) << 4; break;
-	case Tag("ecl"): Result |= (0x100 | ValidEyeColor			  (Value)) << 5; break;
-	case Tag("pid"): Result |= (0x100 | ValidNumber<0,999999999,9>(Value)) << 6; break;
+	case Tag("byr"): Result |= (ValidNumber<1920,2002,4>  (Value) << 8 | 1) << 0; break;
+	case Tag("iyr"): Result |= (ValidNumber<2010,2020,4>  (Value) << 8 | 1) << 1; break;
+	case Tag("eyr"): Result |= (ValidNumber<2020,2030,4>  (Value) << 8 | 1) << 2; break;
+	case Tag("hgt"): Result |= (ValidHeight				  (Value) << 8 | 1) << 3; break;
+	case Tag("hcl"): Result |= (ValidHairColor			  (Value) << 8 | 1) << 4; break;
+	case Tag("ecl"): Result |= (ValidEyeColor			  (Value) << 8 | 1) << 5; break;
+	case Tag("pid"): Result |= (ValidNumber<0,999999999,9>(Value) << 8 | 1) << 6; break;
 	}
 	return Result;
+}
+void Split(std::string_view String, std::function<void(std::string_view)> Proc, char Delim = '\n')
+{
+	for(
+		auto Cur = String.data(), End = Cur + String.length();
+		Cur != End; Cur += ((Cur==End) ? 0 : 1)
+	)
+	{
+		const auto Beg = Cur; Cur = std::search_n(Beg, End, 1, Delim);
+		if (Cur != Beg) Proc(std::string_view(Beg, Cur - Beg));
+	}
 }
 
 int main()
@@ -83,17 +94,18 @@ int main()
 			const std::uint16_t Tests = std::transform_reduce(
 				CurPassport.cbegin(), CurPassport.cend(), 0, std::bit_or<>(),
 				[](auto Attr){return ValidateField(Attr.first, Attr.second);}
-			);
-			Part1 += (Tests >> 8) == 0b01111111;
-			Part2 += Tests == 0b01111111'01111111;
-			CurPassport.clear();
+			); CurPassport.clear();
+			Part1 += std::uint8_t(Tests) == 0x7F; Part2 += Tests == 0x7F'7F;
 		}
-		std::stringstream LineStream(CurLine); std::string CurAttribute;
-		while( LineStream >> CurAttribute)
-		{
-			const std::size_t Colon = CurAttribute.find_first_of(':');
-			CurPassport[*(std::uint32_t*)CurAttribute.substr(0, Colon).data()] = CurAttribute.substr(Colon + 1);
-		}
+		Split(
+			CurLine,
+			[&CurPassport](std::string_view CurAttribute)
+			{
+				const std::size_t Colon = CurAttribute.find_first_of(':');
+				CurPassport[0xFFFFFF & *(std::uint32_t*)CurAttribute.substr(0, Colon).data()] = CurAttribute.substr(Colon + 1);
+			},
+			' '
+		);
 	}
 	std::cout << Part1 << std::endl; std::cout << Part2 << std::endl;
 }
