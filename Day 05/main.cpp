@@ -1,33 +1,35 @@
 #include <iostream>
-#include <set>
+
+// XOR of all number s from [1,N]
+// https://oeis.org/A003815
+inline std::uint16_t SigmaXor(std::uint16_t N)
+{
+	return (N & (N << 1 & 2) - 1) ^ (N >> 1 & 1);
+}
 
 int main()
 {
-	std::set<std::size_t> Seats;
-	std::size_t Min{127*8+7}, Max{}, Part2{};
-	std::string CurLine; std::size_t i;
+	std::uint16_t Min{127*8+7}, Max{}, Missing{}; std::string CurLine;
 	while( std::getline(std::cin, CurLine) )
 	{
-		std::uintmax_t Row = 0;
-		std::uintmax_t Column = 0;
-		for( i = 0; i < 7; ++i )
+		std::uint16_t SeatID{};
+		for( std::size_t i = 0; i < 10; ++i )
 		{
-			Row <<= 1; Row |= CurLine[i] == 'B';
+			SeatID <<=1;
+			switch(CurLine[i])
+			{
+				case 'B': case 'R':
+				{
+					SeatID |= 1;
+					break;
+				}
+			}
 		}
-		for( i = 7; i < 10; ++i )
-		{
-			Column <<= 1; Column |= CurLine[i] == 'R';
-		}
-		const std::size_t CurrentID = Row * 8 + Column;
-		Seats.insert(CurrentID);
-		Max = std::max(Max, CurrentID); Min = std::min(Min, CurrentID);
+		Missing ^= SeatID;
+		Max = std::max(Max, SeatID); Min = std::min(Min, SeatID);
 	}
-	for( i = Min; i <= Max; ++i )
-	{
-		if( Seats.count(i - 1) && Seats.count(i + 1) && !Seats.count(i) )
-		{
-			Part2 = i; break;
-		}
-	}
-	std::cout << Max << std::endl; std::cout << Part2 << std::endl;
+	// Missing is the XOR of all processed seats, except our own
+	// So we XOR all the seats between Min and Max, leaving only one seat left
+	Missing ^= SigmaXor(Min-1) ^ SigmaXor(Max);
+	std::cout << Max << '\n' << Missing << std::endl;
 }
