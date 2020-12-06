@@ -8,6 +8,7 @@ inline std::uintmax_t XorTo(std::uintmax_t N)
 int main()
 {
 	std::uintmax_t Min{~0ull}, Max{}, Missing{}; std::string CurLine;
+	std::ios_base::sync_with_stdio(false); std::cin.tie(nullptr);
 	while(std::getline(std::cin, CurLine))
 	{
 		std::uintmax_t SeatID{};
