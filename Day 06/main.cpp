@@ -10,7 +10,7 @@ int main()
 		if( CurLine.clear(), std::getline(std::cin, CurLine); CurLine.empty())
 		{
 			Part1 += std::popcount(GroupMask);
-			Part2 += std::popcount(GroupMask & QuestionMask);
+			Part2 += std::popcount(QuestionMask);
 			GroupMask = 0; QuestionMask = ~0u;
 		}
 		else
