@@ -4,23 +4,10 @@
 #include <unordered_set>
 #include <stack>
 
-using ContainedT =
-	std::unordered_map<
-		// Bag Color
-		std::string,
-		// Other bags this bag Contains + Count
-		std::unordered_map<std::string, std::size_t>
-	>;
+using ContainedT = std::unordered_map<std::string, std::unordered_map<std::string, std::size_t>>;
+using ContainedInT = std::unordered_map<std::string, std::unordered_set<std::string>>;
 
-using ContainedInT =
-	std::unordered_map<
-		// Bag Color
-		std::string,
-		// Bags that contain this bag
-		std::unordered_set<std::string>
-	>;
-
-std::uintmax_t Check( const ContainedInT& ContainedIn, const std::string& Color )
+std::uintmax_t ParentCount( const ContainedInT& ContainedIn, const std::string& Color = "shinygold")
 {
 	std::unordered_set<std::string> ContainedColor;
 	std::stack<std::string> Queue;
@@ -41,7 +28,7 @@ std::uintmax_t Check( const ContainedInT& ContainedIn, const std::string& Color 
 	return ContainedColor.size();
 }
 
-std::uintmax_t BagCount( const ContainedT& Contained, const std::string& Color )
+std::uintmax_t BagCount( const ContainedT& Contained, const std::string& Color = "shinygold" )
 {
 	std::uintmax_t Total = 0;
 	if( Contained.count(Color) )
@@ -56,12 +43,10 @@ std::uintmax_t BagCount( const ContainedT& Contained, const std::string& Color )
 
 int main()
 {
-	std::string CurLine{}, Cull{};
-	ContainedT Contained; ContainedInT ContainedIn;
+	std::string CurLine{}, Cull{}; ContainedT Contained; ContainedInT ContainedIn;
 	while( std::getline(std::cin, CurLine) )
 	{
-		std::stringstream LineStream(CurLine);
-		std::string Adjective{}, Color{};
+		std::stringstream LineStream(CurLine); std::string Adjective{}, Color{};
 		LineStream >> Adjective >> Color >> Cull >> Cull;
 		while( LineStream )
 		{
@@ -75,9 +60,5 @@ int main()
 		}
 	}
 
-	std::cout
-		<< Check(ContainedIn, "shinygold")
-		<< '\n'
-		<< BagCount(Contained, "shinygold")
-		<< std::endl;
+	std::cout << ParentCount(ContainedIn) << '\n' << BagCount(Contained) << std::endl;
 }
