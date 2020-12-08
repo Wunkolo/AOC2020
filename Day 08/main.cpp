@@ -1,51 +1,49 @@
 #include <iostream>
 #include <cstdio>
 #include <vector>
-#include <unordered_set>
-#include <optional>
 
 template<std::size_t N>
-inline constexpr std::uint32_t Tag( const char (&TagString)[N])
+inline constexpr std::uint32_t Opcode( const char (&OpString)[N])
 {
-	static_assert(N == 4, "Tag must be 3 characters");
-	return (TagString[2] << 16) | (TagString[1] <<  8) | (TagString[0]);
+	static_assert(N == 4, "Opcode must be 3 characters");
+	return (OpString[2] << 16) | (OpString[1] <<  8) | (OpString[0]);
 }
 
 struct Instruction
 {
 	enum OpCode : std::uint32_t
 	{
-		Accumulate	= Tag("acc"),
-		Jump		= Tag("jmp"),
-		NoOperation	= Tag("nop")
+		Acc	= Opcode("acc"),
+		Jmp	= Opcode("jmp"),
+		Nop	= Opcode("nop")
 	} Operation;
 	std::intmax_t Operand;
 };
 
 bool Execute(const std::vector<Instruction>& Program, std::intmax_t& Result)
 {
-	std::unordered_set<std::uintmax_t> Visited;
+	std::vector<bool> Visited(Program.size(), false);
 	std::intmax_t Accumulator = 0;
 	std::uintmax_t ProgramCounter = 0;
 
-	while(Visited.count(ProgramCounter) == 0 && ProgramCounter < Program.size())
+	while(Visited[ProgramCounter] == false && ProgramCounter < Program.size())
 	{
 		const Instruction& CurInstruction = Program[ProgramCounter];
-		Visited.insert(ProgramCounter);
+		Visited[ProgramCounter] = true;
 		switch(CurInstruction.Operation)
 		{
-			case Instruction::OpCode::Accumulate:
+			case Instruction::OpCode::Acc:
 			{
 				Accumulator += CurInstruction.Operand;
 				++ProgramCounter;
 				break;
 			}
-			case Instruction::OpCode::Jump:
+			case Instruction::OpCode::Jmp:
 			{
 				ProgramCounter += CurInstruction.Operand;
 				break;
 			}
-			case Instruction::OpCode::NoOperation:
+			case Instruction::OpCode::Nop:
 			{
 				++ProgramCounter;
 				break;
@@ -59,25 +57,21 @@ bool Execute(const std::vector<Instruction>& Program, std::intmax_t& Result)
 std::intmax_t Part2(const std::vector<Instruction>& Program)
 {
 	std::intmax_t CurResult;
+	std::vector<Instruction> NewProgram = Program;
 	for(std::size_t i = 0; i < Program.size(); ++i)
 	{
 		const Instruction& CurInstruction = Program[i];
+		Instruction::OpCode NewOpCode = {};
 		switch(CurInstruction.Operation)
 		{
-			case Instruction::OpCode::Jump:
-			{
-				std::vector<Instruction> CurProgram = Program;
-				CurProgram[i].Operation = Instruction::OpCode::NoOperation;
-				if(Execute(CurProgram, CurResult)) return CurResult;
-				break;
-			}
-			case Instruction::OpCode::NoOperation:
-			{
-				std::vector<Instruction> CurProgram = Program;
-				CurProgram[i].Operation = Instruction::OpCode::Jump;
-				if(Execute(CurProgram, CurResult)) return CurResult;
-				break;
-			}
+			case Instruction::OpCode::Jmp: NewOpCode = Instruction::OpCode::Nop; break;
+			case Instruction::OpCode::Nop: NewOpCode = Instruction::OpCode::Jmp; break;
+		}
+		if(NewOpCode)
+		{
+			NewProgram[i].Operation = NewOpCode;
+			if(Execute(NewProgram, CurResult)) return CurResult;
+			NewProgram[i].Operation = CurInstruction.Operation;
 		}
 	}
 	return 0;
