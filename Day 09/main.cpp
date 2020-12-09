@@ -4,25 +4,22 @@
 #include <numeric>
 #include <algorithm>
 
-constexpr std::size_t Scope = 5;
+constexpr std::size_t Scope = 25;
 
 std::uintmax_t FindInvalid(const std::vector<std::uintmax_t>& Numbers, std::size_t Scope)
 {
 	for( std::size_t i = Scope; i < Numbers.size(); ++i )
 	{
-		const std::uintmax_t CurNumber = Numbers[i];
 		bool Valid = false;
 		for(std::size_t j = i - Scope; j < i && !Valid; ++j)
 		{
-			const std::uintmax_t OpA = Numbers[j];
 			for(std::size_t k = i - Scope; k < i && !Valid; ++k)
 			{
 				if(j == k) continue;
-				const std::uintmax_t OpB = Numbers[k];
-				if(OpA + OpB == CurNumber) Valid = true;
+				if(Numbers[j] + Numbers[k] == Numbers[i]) Valid = true;
 			}
 		}
-		if(!Valid) return CurNumber;
+		if(!Valid) return Numbers[i];
 	}
 	return 0;
 }
@@ -33,11 +30,9 @@ std::uintmax_t FindWeakness(const std::vector<std::uintmax_t>& Numbers, std::uin
 	std::partial_sum(Numbers.cbegin(), Numbers.cend(), SumTable.begin());
 	for( std::size_t i = 1; i < SumTable.size(); ++i)
 	{
-		const std::uintmax_t CurSum = SumTable[i];
 		for( std::size_t j = 0; j < i; ++j )
 		{
-			const std::uintmax_t OtherSum = SumTable[j];
-			if( CurSum - OtherSum == Target )
+			if( SumTable[i] - SumTable[j] == Target )
 			{
 				const auto MinMax = std::minmax_element(
 					Numbers.cbegin() + j, Numbers.cbegin() + i
