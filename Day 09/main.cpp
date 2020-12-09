@@ -28,18 +28,19 @@ std::uintmax_t FindWeakness(const std::vector<std::uintmax_t>& Numbers, std::uin
 {
 	std::vector<std::uintmax_t> SumTable(Numbers.size());
 	std::partial_sum(Numbers.cbegin(), Numbers.cend(), SumTable.begin());
-	for( std::size_t i = 1; i < SumTable.size(); ++i)
+	std::size_t Beg{}, End{1};
+	while( End < Numbers.size() )
 	{
-		for( std::size_t j = 0; j < i; ++j )
+		const std::uintmax_t CurArea = SumTable[End] - SumTable[Beg];
+		if( CurArea == Target )
 		{
-			if( SumTable[i] - SumTable[j] == Target )
-			{
-				const auto MinMax = std::minmax_element(
-					Numbers.cbegin() + j, Numbers.cbegin() + i
-				);
-				return *MinMax.second + *MinMax.first;
-			}
+			const auto MinMax = std::minmax_element(
+				Numbers.cbegin() + Beg, Numbers.cbegin() + End
+			);
+			return *MinMax.second + *MinMax.first;
 		}
+		End += (CurArea < Target); Beg += (CurArea > Target);
+
 	}
 	return 0;
 }
