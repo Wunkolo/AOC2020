@@ -7,10 +7,16 @@
 
 std::uintmax_t Part1(const std::vector<std::uintmax_t>& Jolts)
 {
-	std::vector<std::uintmax_t> Differences(Jolts.size());
-	std::adjacent_difference(Jolts.cbegin(), Jolts.cend(), Differences.begin());
-	return std::count(Differences.cbegin(), Differences.cend(), 1)
-		* std::count(Differences.cbegin(), Differences.cend(), 3);
+	std::uintmax_t Ones{}, Threes{};
+	for( std::size_t i = 1; i < Jolts.size(); ++i )
+	{
+		switch( Jolts[i] - Jolts[i - 1] )
+		{
+			case 1:{ ++Ones; break;}
+			case 3:{ ++Threes; break;}
+		}
+	}
+	return Ones * Threes;
 }
 
 std::uintmax_t Part2(const std::vector<std::uintmax_t>& Jolts)
@@ -26,11 +32,12 @@ std::uintmax_t Part2(const std::vector<std::uintmax_t>& Jolts)
 int main()
 {
 	std::uintmax_t CurJolt;
-	std::vector<std::uintmax_t> Jolts;
+	std::vector<std::uintmax_t> Jolts{0};
 	while(std::cin >> CurJolt) Jolts.push_back(CurJolt);
-	Jolts.push_back(0);
-	Jolts.push_back(3 + *std::max_element(Jolts.cbegin(), Jolts.cend()));
 	std::sort(Jolts.begin(), Jolts.end());
+	Jolts.push_back(3 + Jolts.back());
+	std::vector<std::uintmax_t> Differences{Jolts.size()};
+
 	std::cout << Part1(Jolts) << std::endl;
 	std::cout << Part2(Jolts) << std::endl;
 }
