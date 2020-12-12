@@ -53,7 +53,7 @@ std::uintmax_t SimulateWaypoint(
 			case 'E': {                             WayX += Value; break;}
 			case 'W': {                             WayX -= Value; break;}
 			case 'F': {PosX += WayX * Value; PosY += WayY * Value; break;}
-			case 'L': {Value = ((-Value + 360) % 360);                   }
+			case 'L': {Value = (-Value + 360);                           }
 			case 'R': {
 				const auto Bin = (Value%360)/90; const auto Gray = Bin ^ (Bin >> 1);
 				if( Bin&0b01)std::swap(WayX, WayY);
