@@ -23,6 +23,7 @@ std::uintmax_t Part1(
 }
 
 // https://stackoverflow.com/a/8498251/531719
+// Modpow (a, b, )
 template <typename T>
 T ModPow(T Base, T Exp, T Modulo)
 {
@@ -44,8 +45,12 @@ std::uintmax_t Part2( const std::vector<Bus>& Busses )
 	std::uintmax_t Sum{};
 	for(const auto& Bus : Busses)
 	{
-		const std::uintmax_t p = Product / Bus.ID;
-		Sum += (Bus.ID - Bus.Index) * p * ModPow(p, Bus.ID - 2, Bus.ID);
+		const std::uintmax_t P = Product / Bus.ID;
+		// All the Bus IDs seem to be prime.. so ModPow(a, b - 2, m) is a faster
+		// shortcut to get the inverse:
+		// a^m-2 = a^-1 mod m
+		// https://en.wikipedia.org/wiki/Modular_multiplicative_inverse#Using_Euler.27s_theorem
+		Sum += (Bus.ID - Bus.Index) * P * ModPow(P, Bus.ID - 2, Bus.ID);
 	}
 	return Sum % Product;
 }
