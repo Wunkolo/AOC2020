@@ -11,7 +11,7 @@ static constexpr std::array<std::tuple<std::int8_t, std::int8_t>, 4> Offsets = {
 
 std::uintmax_t SimulateShip(
 	const std::vector<std::tuple<char, std::uintmax_t>>& Instructions,
-	std::int32_t PosX = 0, std::int32_t PosY = 0, std::int32_t Rot = 0
+	std::intmax_t PosX = 0, std::intmax_t PosY = 0, std::intmax_t Rot = 0
 )
 {
 	for(const auto& Instruction : Instructions)
@@ -24,11 +24,11 @@ std::uintmax_t SimulateShip(
 			case 'S': {                PosY -= Value; break;}
 			case 'E': {                PosX += Value; break;}
 			case 'W': {                PosX -= Value; break;}
-			case 'L': {Rot +=     (Value/90); Rot%=4; break;}
-			case 'R': {Rot += 4 - (Value/90); Rot%=4; break;}
+			case 'L': {            Rot +=      Value; break;}
+			case 'R': {            Rot += -Value + 4; break;}
 			case 'F': {
-				PosX += Value * std::get<0>(Offsets[Rot]);
-				PosY += Value * std::get<1>(Offsets[Rot]);
+				PosX += Value * std::get<0>(Offsets[Rot%4]);
+				PosY += Value * std::get<1>(Offsets[Rot%4]);
 				break;
 			}
 		}
@@ -38,10 +38,10 @@ std::uintmax_t SimulateShip(
 
 std::uintmax_t SimulateWaypoint(
 	const std::vector<std::tuple<char, std::uintmax_t>>& Instructions,
-	std::int32_t WayX = 0, std::int32_t WayY = 0, std::int32_t Rot = 0
+	std::intmax_t WayX = 0, std::intmax_t WayY = 0, std::intmax_t Rot = 0
 )
 {
-	std::int32_t PosX{}, PosY{};
+	std::intmax_t PosX{}, PosY{};
 	for(const auto& Instruction : Instructions)
 	{
 		const char Action = std::get<0>(Instruction);
@@ -53,9 +53,9 @@ std::uintmax_t SimulateWaypoint(
 			case 'E': {                             WayX += Value; break;}
 			case 'W': {                             WayX -= Value; break;}
 			case 'F': {PosX += WayX * Value; PosY += WayY * Value; break;}
-			case 'L': {Value = (-Value + 360);                           }
+			case 'L': {                      Value += -Value + 4;       }
 			case 'R': {
-				const auto Bin = (Value%360)/90; const auto Gray = Bin ^ (Bin >> 1);
+				const auto Bin = (Value%4); const auto Gray = Bin ^ (Bin >> 1);
 				if( Bin&0b01)std::swap(WayX, WayY);
 				if(Gray&0b10)WayX = -WayX; if(Gray&0b01)WayY = -WayY;
 				break;
@@ -67,10 +67,18 @@ std::uintmax_t SimulateWaypoint(
 
 int main()
 {
+	std::ios_base::sync_with_stdio(false);
+	std::cin.tie(nullptr);
 	char Action; std::uintmax_t Value;
 	std::vector<std::tuple<char, std::uintmax_t>> Instructions;
 	while( std::scanf(" %c%ju", &Action, &Value) == 2 )
 	{
+		switch(Action)
+		{
+			case 'L':
+			case 'R':
+				Value /= 90;
+		}
 		Instructions.emplace_back(Action, Value);
 	}
 	std::cout << SimulateShip(    Instructions,  0, 0) << std::endl;
