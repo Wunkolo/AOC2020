@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cstdio>
-#include <vector>
+#include <algorithm>
 #include <string_view>
 #include <unordered_map>
 #include <bit>
@@ -10,37 +10,35 @@
 int main()
 {
 	std::unordered_map<std::uintmax_t, std::uintmax_t> Version1, Version2;
-	std::uintmax_t Mask{}, MaskValue{};
+	std::uintmax_t CurMask{}, CurMaskValue{};
 	std::string CurLine;
-	while(std::getline(std::cin, CurLine))
+	while( std::getline(std::cin, CurLine) )
 	{
-		if(CurLine[1] == 'a') // mask
+		if( CurLine[1] == 'a' ) // mask
 		{
-			const auto MaskString = std::string_view(CurLine).substr(7);
-			Mask = MaskValue = 0;
-			for(std::intmax_t i = 0; i < 36; ++i)
-			{
-				const std::uint8_t CurBit = MaskString[i];
-				if((CurBit == '0') || (CurBit == '1'))
-				{
-					Mask |= 1 << (35 - i);
-					MaskValue |= (std::uintmax_t(CurBit - '0') << (35 - i));
-				}
-			}
+			const auto MaskInput = std::string_view(CurLine).substr(7);
+			std::string MaskString(36, '0'), MaskValueString(36, '0');
+			std::transform(MaskInput.cbegin(), MaskInput.cend(), MaskString.begin(),
+				[](auto Char){return Char == 'X' ? '1':'0';}
+			);
+			std::transform(MaskInput.cbegin(), MaskInput.cend(), MaskValueString.begin(),
+				[](auto Char){return Char == 'X' ? '0':Char;}
+			);
+			CurMask			= std::bitset<36>(MaskString).to_ullong();
+			CurMaskValue	= std::bitset<36>(MaskValueString).to_ullong();
 		}
 		else // mem
 		{
 			std::uintmax_t Address, Value;
 			std::sscanf(CurLine.c_str(), "mem[%ju] = %ju", &Address, &Value);
-			const auto WriteValue = (Value & ~Mask) | MaskValue;
 			// Part 1
-			Version1[Address] = WriteValue;
+			Version1[Address] = (Value & CurMask) | CurMaskValue;
 			// Part 2
-			Address |= MaskValue; Address &= Mask;
-			const std::uintmax_t Permutations = 1 << std::popcount(~Mask);
-			for(std::size_t i = 0; i < Permutations; ++i)
+			Address |= CurMaskValue; Address &= ~CurMask;
+			const std::uintmax_t Permutations = 1 << std::popcount(CurMask);
+			for( std::size_t i = 0; i < Permutations; ++i )
 			{
-				const std::uintmax_t CurPermutation = _pdep_u64(i, ~Mask);
+				const std::uintmax_t CurPermutation = _pdep_u64(i, CurMask);
 				Version2[Address | CurPermutation] = Value;
 			}
 		}
