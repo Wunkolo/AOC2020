@@ -7,12 +7,22 @@
 #include <map>
 #include <set>
 
-// struct Ring2{}
+struct Rule
+{
+	std::uintmax_t MinA, MinB, MaxA, MaxB;
+	bool Test(std::uintmax_t Number)
+	{
+		return
+			(MinA <= Number && Number <= MaxA) ||
+			(MinB <= Number && Number <= MaxB);
+	}
+};
 
 int main()
 {
 	// FieldStart->FieldEnd | FieldStart->Ticket
-	std::map<std::uintmax_t, std::uintmax_t> FieldSpan, FieldName;
+	std::map<std::string, Rule> Rules;
+	std::map<std::uintmax_t, Rule*> RuleSpans;
 	std::set<std::uintmax_t> ValidFields, DepartureField;
 	char Name[256];
 	std::uintmax_t MinA, MinB, MaxA, MaxB;
@@ -23,13 +33,11 @@ int main()
 			std::sscanf( CurLine.c_str(), " %[^:]: %ju-%ju or %ju-%ju", Name, &MinA, &MaxA, &MinB, &MaxB) == 5
 		)
 		{
-			FieldSpan[MinA] = MaxA; FieldSpan[MinB] = MaxB; ValidFields.insert({MinA, MinB});
-			FieldName[MinA] = MinA; FieldName[MinB] = MinA;
-			FieldIdxMap[FieldIdx] = MinA;
-			if(CurLine.rfind("departure", 0) == 0)
-			{
-				DepartureField.insert({MinA, MinB});
-			}
+			Rule CurRule;
+			CurRule.MinA = MinA; CurRule.MaxA = MaxA;
+			CurRule.MinB = MinB; CurRule.MaxB = MaxB;
+			Rules[Name] = CurRule;
+			RuleSpans[MinA] = &Rules[Name]; RuleSpans[MinB] = &Rules[Name];
 		}
 		//std::cout << Name << ' ' << MinA << '_' << MaxA << ' ' << MinB << '_' << MaxB << std::endl;
 	}
@@ -60,15 +68,13 @@ int main()
 	for(const auto& CurTicket : NearbyTickets)
 	{
 		bool ValidTicket = true;
-		std::set<std::uintmax_t> CurFields;
 		for(auto& Num : CurTicket)
 		{
-			const auto Match = --FieldSpan.lower_bound(Num);
+			const auto Match = --RuleSpans.lower_bound(Num);
 			//std::cout << Num << '|' << Match->first << '-' << Match->second << std::endl;
-			if(Match->first <= Num && Num <= Match->second)
+			if(Match->second->Test(Num))
 			{
 				// Match
-				CurFields.insert(Match->first);
 			}
 			else
 			{
@@ -80,43 +86,45 @@ int main()
 		if( ValidTicket )
 		{
 			ValidTickets.push_back(CurTicket);
-			std::set_intersection(
-				CurFields.cbegin(), CurFields.cend(),
-				ValidFields.cbegin(), ValidFields.cend(),
-				std::inserter(ValidFields, ValidFields.begin())
-			);
 		}
 	}
+	// std::cout << ValidTickets.size() << std::endl;
+	// std::vector<std::vector<std::uintmax_t>> Columns(ValidTickets.size());
 
-	std::vector<std::uintmax_t> ValidFieldOrder;
-	// For each column N
-	for(std::size_t i = 0; i < 20; ++i)
-	{
-		// Get all the rules that match each number in the column
-		std::vector<std::uintmax_t> CurColumn;
-		for(const auto& CurTicket : ValidTickets)
-		{
-			const auto CurNum = CurTicket[i];
-			const auto CurMatch = --ValidFields.lower_bound(CurNum);
-			CurColumn.push_back(FieldName[*CurMatch]);
-		}
-		for(auto Field : CurColumn)
-		{
-			std::cout << Field << ',';
-		}
-		std::cout << std::endl;
-		// All the rules are the same for this column
-		if(std::adjacent_find( CurColumn.cbegin(), CurColumn.cend(), std::not_equal_to<>() ) == CurColumn.end() )
-		{
-			ValidFieldOrder.push_back(CurColumn[0]);
-			ValidFields.erase(CurColumn[0]);
-		}
-	}
-	for(auto Field : ValidFieldOrder)
-	{
-		std::cout << Field << ',';
-	}
-	std::cout << std::endl;
+	// for( std::size_t Row = 0; Row < ValidTickets.size(); ++Row )
+	// {
+	// 	for( std::size_t Column = 0; Column < ValidTickets[Row].size(); ++Column )
+	// 	{
+	// 		Columns[Column].push_back(ValidTickets[Row][Column]);
+	// 	}
+	// }
+	// std::map<std::uintmax_t, std::set<std::uintmax_t>> Possible;
+
+	// for( std::size_t i = 0; i < Columns.size(); ++i )
+	// {
+	// 	std::cout << i << '|';
+	// 	for(const auto Span : Rules)
+	// 	{
+	// 		bool ValidCol = true;
+	// 		for(const auto Val : Columns[i])
+	// 		{
+	// 			ValidCol &= (Span.first <= Val && Val <= Span.second);
+	// 		}
+	// 		if(ValidCol)
+	// 		{
+	// 			Possible[i].insert(Span.first);
+	// 			std::cout << Span.first << '-' << Span.second << ',';
+	// 		}
+	// 	}
+	// 	std::cout << std::endl;
+	// }
+
+	// std::vector<std::uintmax_t> Definite(Possible.size());
+	// while(Possible.size())
+	// {
+	// 	std::uintmax_t FoundCol = 0;
+
+	// }
 
 	std::uintmax_t Part2 = 1;
 	std::cout << Part1 << std::endl;
