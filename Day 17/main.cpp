@@ -145,7 +145,7 @@ std::uintmax_t Part1(const std::unordered_set<glm::ivec4>& Field, std::size_t Cy
 		NextField.clear();
 		for(const auto& Sum : SumField)
 		{
-			if(Sum.second == 2 && CurField.count(glm::vec4(Sum.first, 0)))
+			if(Sum.second == 2 && CurField.count(glm::ivec4(Sum.first, 0)))
 				NextField.insert(glm::ivec4(Sum.first, 0));
 			if(Sum.second == 3)
 				NextField.insert(glm::ivec4(Sum.first, 0));
