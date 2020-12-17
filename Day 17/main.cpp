@@ -1,18 +1,16 @@
 #include <iostream>
 #include <cstdio>
-#include <sstream>
-#include <algorithm>
-#include <vector>
 #include <array>
-#include <cassert>
-#include <map>
 #include <unordered_set>
 #include <unordered_map>
-#include <bit>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/hash.hpp>
 
+// import itertools
+// for (x, y, z) in itertools.product(*[[-1, 0, 1] for _ in range(3)]):
+// 	if x == y == z == 0: continue
+// 	print(f'{x:+}, {y:+}, {z:+}')
 constexpr static std::array<glm::ivec3, 26> Offsets3 = {{
 	{ -1, -1, -1},
 	{ -1, -1,  0},
@@ -42,6 +40,10 @@ constexpr static std::array<glm::ivec3, 26> Offsets3 = {{
 	{ +1, +1, +1},
 }};
 
+// import itertools
+// for (x, y, z, w) in itertools.product(*[[-1, 0, 1] for _ in range(4)]):
+// 	if x == y == z == w == 0: continue
+// 	print(f'{x:+}, {y:+}, {z:+}, {w:+}')
 constexpr static std::array<glm::ivec4, 80> Offsets4 = {{
 	{-1, -1, -1, -1},
 	{-1, -1, -1, +0},
@@ -159,10 +161,7 @@ std::uintmax_t Part2(const std::unordered_set<glm::ivec4>& Field, std::size_t Cy
 		std::unordered_map<glm::ivec4, std::uintmax_t> SumField;
 		for( const auto& CurActiveCube : CurField )
 		{
-			for(const auto& Offset : Offsets4)
-			{
-				++SumField[CurActiveCube + Offset];
-			}
+			for(const auto& Offset : Offsets4) ++SumField[CurActiveCube + Offset];
 		}
 		std::unordered_set<glm::ivec4> NextField;
 		for(const auto& Sum : SumField)
@@ -186,10 +185,7 @@ int main()
 	{
 		for(std::size_t CurCol = 0; CurCol < CurLine.size(); ++CurCol)
 		{
-			if(CurLine[CurCol] == '#')
-			{
-				ActiveCubes.insert(glm::ivec4(CurCol, CurRow, 0, 0));
-			}
+			if(CurLine[CurCol] == '#') ActiveCubes.insert({CurCol, CurRow, 0, 0});
 		}
 		++CurRow;
 	}
