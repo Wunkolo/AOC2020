@@ -130,9 +130,11 @@ constexpr static std::array<glm::ivec4, 80> Offsets4 = {{
 std::uintmax_t Part1(const std::unordered_set<glm::ivec4>& Field, std::size_t Cycles)
 {
 	std::unordered_set<glm::ivec4> CurField = Field;
+	std::unordered_set<glm::ivec4> NextField;
+	std::unordered_map<glm::ivec3, std::uintmax_t> SumField;
 	for(std::size_t CurCycle = 0; CurCycle < Cycles; ++CurCycle)
 	{
-		std::unordered_map<glm::ivec3, std::uintmax_t> SumField;
+		SumField.clear();
 		for( const auto& CurActiveCube : CurField )
 		{
 			for(const auto& Offset : Offsets3)
@@ -140,7 +142,7 @@ std::uintmax_t Part1(const std::unordered_set<glm::ivec4>& Field, std::size_t Cy
 				++SumField[glm::ivec3(CurActiveCube) + Offset];
 			}
 		}
-		std::unordered_set<glm::ivec4> NextField;
+		NextField.clear();
 		for(const auto& Sum : SumField)
 		{
 			if(Sum.second == 2 && CurField.count(glm::vec4(Sum.first, 0)))
@@ -148,7 +150,7 @@ std::uintmax_t Part1(const std::unordered_set<glm::ivec4>& Field, std::size_t Cy
 			if(Sum.second == 3)
 				NextField.insert(glm::ivec4(Sum.first, 0));
 		}
-		CurField = NextField;
+		CurField = std::move(NextField);
 	}
 	return CurField.size();
 }
@@ -156,22 +158,26 @@ std::uintmax_t Part1(const std::unordered_set<glm::ivec4>& Field, std::size_t Cy
 std::uintmax_t Part2(const std::unordered_set<glm::ivec4>& Field, std::size_t Cycles)
 {
 	std::unordered_set<glm::ivec4> CurField = Field;
+	std::unordered_set<glm::ivec4> NextField;
+	std::unordered_map<glm::ivec4, std::uintmax_t> SumField;
 	for(std::size_t CurCycle = 0; CurCycle < Cycles; ++CurCycle)
 	{
-		std::unordered_map<glm::ivec4, std::uintmax_t> SumField;
+		SumField.clear();
 		for( const auto& CurActiveCube : CurField )
 		{
 			for(const auto& Offset : Offsets4) ++SumField[CurActiveCube + Offset];
 		}
-		std::unordered_set<glm::ivec4> NextField;
+		NextField.clear();
 		for(const auto& Sum : SumField)
 		{
+			// This space is touching 2 active cubes, and is an _active_ block
 			if(Sum.second == 2 && CurField.count(Sum.first))
 				NextField.insert(Sum.first);
-			if(Sum.second == 3)
+			// This space is touching 3 active cubes, and is an inactive block
+			if(Sum.second == 3 && !CurField.count(Sum.first))
 				NextField.insert(Sum.first);
 		}
-		CurField = NextField;
+		CurField = std::move(NextField);
 	}
 	return CurField.size();
 }
