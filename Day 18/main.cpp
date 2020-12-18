@@ -2,12 +2,13 @@
 #include <cstdio>
 #include <vector>
 #include <numeric>
+#include <algorithm>
 #include <cctype>
 #include <stack>
 #include <queue>
 
 template< bool Part2 = false >
-std::uintmax_t Evaluate(const std::vector<char>& Expression)
+std::uintmax_t Evaluate(const std::string& Expression)
 {
 	std::stack<char> OperatorStack;
 	std::stack<std::uintmax_t> OperandStack;
@@ -54,15 +55,11 @@ std::uintmax_t Evaluate(const std::vector<char>& Expression)
 int main()
 {
 	std::string CurLine;
-	std::vector<std::vector<char>> Expressions;
+	std::vector<std::string> Expressions;
 	while( std::getline(std::cin, CurLine) )
 	{
-		std::vector<char> CurExpression;
-		for(const auto& Char : CurLine)
-		{
-			if( Char != ' ') CurExpression.push_back(Char);
-		}
-		Expressions.push_back(std::move(CurExpression));
+		CurLine.erase(std::remove(CurLine.begin(), CurLine.end(), ' '), CurLine.end());
+		Expressions.push_back(CurLine);
 	}
 
 	std::cout << std::transform_reduce(
