@@ -18,7 +18,6 @@ std::uintmax_t Simulate(std::unordered_set<glm::ivec2> BlackTiles)
 		std::unordered_map<glm::ivec2, std::uint8_t> NeighborSums;
 		for( const auto& CurTile : BlackTiles )
 		{
-			// Each black tile adds 1 to all neighbor tiles
 			for( const auto& Offset : Offsets ) ++NeighborSums[CurTile + Offset];
 		}
 		std::unordered_set<glm::ivec2> NewTiles;
@@ -34,6 +33,9 @@ std::uintmax_t Simulate(std::unordered_set<glm::ivec2> BlackTiles)
 			}
 		}
 		// Iterate previously black tiles
+		// Determine which black tiles stay
+		// "Any black tile with zero or more than 2 black tiles immediately adjacent to it is flipped to white."
+		// So any black tile with 1 or 2 neighbors get to stay black
 		for( auto& CurTile : BlackTiles )
 		{
 			// Black tiles at least one or two other black tiles stay black tiles
@@ -42,9 +44,8 @@ std::uintmax_t Simulate(std::unordered_set<glm::ivec2> BlackTiles)
 				NewTiles.insert(CurTile);
 			}
 		}
-		BlackTiles = NewTiles;
+		BlackTiles = std::move(NewTiles);
 	}
-
 	return BlackTiles.size();
 }
 
