@@ -1,36 +1,34 @@
-#include <cstddef>
 #include <cstdint>
-#include <iostream>
+#include <cstdio>
 
 // https://stackoverflow.com/a/8498251/531719
 // Transform (a, b, m)
-inline std::uintmax_t Transform(std::uintmax_t Base, std::uintmax_t Exp)
+inline std::uint32_t Transform(std::uint64_t Base, std::uint32_t Exponent)
 {
 	Base %= 20201227ull;
-	std::uintmax_t Result = 1;
-	while (Exp > 0)
+	std::uint32_t Result = 1;
+	while( Exponent )
 	{
-		if (Exp & 1) Result = (Result * Base) % 20201227ull;
-		Base = (Base * Base) % 20201227ull;
-		Exp >>= 1;
+		if( Exponent & 1 ) Result = (Result * Base) % 20201227u;
+		Base = (Base * Base) % 20201227u;
+		Exponent >>= 1;
 	}
 	return Result;
 }
 
 int main()
 {
-	std::uintmax_t PublicKeyCard, PublicKeyDoor;
-	std::cin >> PublicKeyCard >> PublicKeyDoor;
-
-	std::size_t CardLoop{}, DoorLoop{};
-	for(std::size_t i = 1; !(CardLoop && DoorLoop); ++i)
+	std::uint32_t PublicKeyCard{}, PublicKeyDoor{}, CardLoop{}, DoorLoop{};
+	std::scanf(" %u %u", &PublicKeyCard, &PublicKeyDoor);
+	for( std::uint32_t i = 1; !(CardLoop && DoorLoop); ++i )
 	{
-		const auto CurTransform = Transform(7ull, i);
+		const auto CurTransform = Transform(7, i);
 		if(PublicKeyCard == CurTransform) CardLoop = i;
 		if(PublicKeyDoor == CurTransform) DoorLoop = i;
 	}
-	std::cout << CardLoop << ' ' << DoorLoop << std::endl;
-
-	std::cout << Transform(PublicKeyCard, DoorLoop) << std::endl;
-	std::cout << Transform(PublicKeyDoor, CardLoop) << std::endl;
+	std::printf(
+		"%u %u\n%u %u\n",
+		CardLoop, DoorLoop,
+		Transform(PublicKeyCard, DoorLoop), Transform(PublicKeyDoor, CardLoop)
+	);
 }
