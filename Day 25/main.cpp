@@ -20,9 +20,10 @@ int main()
 {
 	std::uint32_t PublicKeyCard{}, PublicKeyDoor{}, CardLoop{}, DoorLoop{};
 	std::scanf(" %u %u", &PublicKeyCard, &PublicKeyDoor);
+	std::uint64_t CurTransform = 1ull;
 	for( std::uint32_t i = 1; !(CardLoop && DoorLoop); ++i )
 	{
-		const auto CurTransform = Transform(7, i);
+		CurTransform = (CurTransform * 7) % 20201227u;
 		if(PublicKeyCard == CurTransform) CardLoop = i;
 		if(PublicKeyDoor == CurTransform) DoorLoop = i;
 	}
